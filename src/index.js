@@ -185,7 +185,19 @@ async function handle(req, env, url) {
   if (p === '/api/health') return json(req, env, { ok: true });
 
   await requireAdmin(req, env);
-  const sql = neon(await secret(env.DATABASE_URL));
+  // Ya autenticado: si algo falla, se devuelve el detalle para poder diagnosticarlo.
+  try {
+    const dbUrl = await secret(env.DATABASE_URL);
+    if (!dbUrl) throw new HttpError(500, 'Falta el secreto DATABASE_URL en el Worker (Secrets Store).');
+    return await rutas(req, env, url, p, neon(dbUrl));
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    console.error('RxD error:', e && e.stack || e);
+    throw new HttpError(500, 'Error interno: ' + String((e && e.message) || e).slice(0, 300));
+  }
+}
+
+async function rutas(req, env, url, p, sql) {
   const m = req.method;
 
   // --- todo lo liviano en una sola llamada (sin el texto de las minutas) ---
