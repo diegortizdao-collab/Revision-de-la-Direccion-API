@@ -202,7 +202,7 @@ async function rutas(req, env, url, p, sql) {
 
   // --- todo lo liviano en una sola llamada (sin el texto de las minutas) ---
   if (m === 'GET' && p === '/api/resumen') {
-    const q = (t, o) => sql.query(`select ${t.cols || '*'} from ${t.table} order by ${o || t.order}`);
+    const q = (t, o) => sql.query(`select * from ${t.table} order by ${o || t.order}`);
     const [revisiones, secciones, indicadores, valores, auditorias, reclamos, acciones, seguimiento, decisiones, entradas] = await Promise.all([
       q(REG.revision), sql.query('select anio, nro, titulo, origen, length(texto)::int largo, actualizado_en from rxd_secciones order by anio, nro'),
       sql.query('select * from rxd_indicadores order by orden'), q(REG.valor), q(REG.auditoria), q(REG.reclamo), q(REG.accion),
